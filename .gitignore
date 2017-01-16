@@ -1,0 +1,8 @@
+/target/
+
+.git
+.settings
+/lib
+.classpath
+.project
+.idea

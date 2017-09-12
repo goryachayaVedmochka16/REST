@@ -1,0 +1,213 @@
+swagger: "2.0"
+info:
+  title: App Control Center API
+  description: An API for managing configuration and common functionality for mobile applications.
+  version: 1.0.0
+basePath: /v1/
+produces:
+  - application/json
+schemes:
+  - https
+  - http
+tags:
+  - name: API
+    description: Routes associated with the API itself including API versions and health checks
+paths:
+  /application/{id}/version/{versionNumber}/country/{country}/configuration:
+    get:
+      description: Returns a configuration for an app with for a certain environment, version number, and application country.
+      parameters:
+        - name: id
+          description: The application id.
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: versionNumber
+          description: The version of the application.
+          in: path
+          required: true
+          type: string
+        - name: country
+          description: The application country for the application.
+          in: path
+          default: US
+          required: true
+          type: string
+      responses:
+        200:
+          description: A list of configuration keys and values.
+          schema:
+            $ref: "#/definitions/ConfigurationResponse"
+        404:
+          description: Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+      tags:
+      - CONFIGURATION
+  /application/{id}/version/{appVersion}/os/{os}/killSwitch:
+    get:
+      description: Returns a list of messages when killswitch is activated
+      parameters:
+        - name: id
+          description: The application id.
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: appVersion
+          description: The version checking for killswitch.
+          in: path
+          required: true
+          type: string
+        - name: os
+          description: The os being checked
+          in: path
+          required: true
+          type: string
+        - name: locale
+          description: The locale being checked for killswitch
+          in: query
+          required: false
+          type: string
+      responses:
+        200:
+          description: message 'Ok' id app not killed
+        400:
+          description: Bad input Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: Not Found Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        421:
+          description: Message when app is killed
+          schema:
+            $ref: "#/definitions/AppKilledResponse"
+      tags:
+      - KILLSWITCHMESSAGE
+  /api/version:
+    get:
+      description: Returns the app version, service version and git commit of the service when was built
+      responses:
+        200:
+          description: a general status of the API version
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
+                description: the major version of the api
+                example: 1
+              serviceVersion:
+                type: string
+                description: the internal version of the service implementation
+                example: 0.4.0
+              serviceCommit:
+                type: string
+                description: the git commit that was used to build the service version
+                example: 2267310299fc5a5120eabde0c3f51a8596e5a632
+      tags:
+      - API
+  /application/{id}/version/{versionNumber}/announcement:
+    get:
+      description: Returns a list of notifications for a specified application and version number. Optional parameters is dateTime
+      parameters:
+        - name: id
+          description: The application id.
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - name: versionNumber
+          description: The version of the application.
+          in: path
+          required: true
+          type: string
+        - name: dateTime
+          description: Active notifications for a specified date.
+          in: query
+          default: null
+          required: false
+          type: string
+      responses:
+        200:
+          description: A list of all active announcements.
+          schema:
+            $ref: "#/definitions/AnnouncementResponse"
+        204:
+          description: Empty.
+          schema:
+            $ref: "#/definitions/EmptyResponse"
+        400:
+          description: Bad input Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: Not Found Error.
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+      tags:
+      - ANNOUNCEMENTS
+
+definitions:
+  AnnouncementResponse:
+    type: array
+    items:
+      $ref: "#/definitions/Announcement"
+  Announcement:
+    description: Array of key-value pairs with all locale and default messages
+    type: object
+    required: ["locale", "message", "bannerActionId", "startDate", "endDate"]
+    properties:
+      locale:
+        type: string
+      message:
+        type: string
+      bannerActionId:
+        type: string
+      startDate:
+        type: string
+      endDate:
+        type: string
+  ConfigurationResponse:
+    type: array
+    items:
+      $ref: "#/definitions/Configuration"
+  Configuration:
+    type: object
+    additionalProperties:
+      type: string
+  AppKilledResponse:
+    properties:
+      name:
+        type: string
+    type: object
+    items:
+      $ref: "#/definitions/LocationMessages"
+  LocationMessages:
+    description: Array of key-value pairs with all locale and default messages
+    type: object
+    required: ["locale", "defaultMessage", "localeMessage"]
+    properties:
+      locale:
+        type: string
+      defaultMessage:
+        type: string
+      localeMessage:
+        type: string
+  ErrorResponse:
+    $ref: "#/definitions/Error"
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+  EmptyResponse:
+    $ref: "#/definitions/Empty"
+  Empty:
+    type: object
+    properties:
+      message:
+        type: string
